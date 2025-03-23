@@ -1,32 +1,32 @@
-import sys
-from io import BytesIO
+from flask import Flask, url_for, request, render_template
 
-import requests
-from PIL import Image
+app = Flask(__name__)
 
-from object_size import get_size
+app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
 
-toponym_to_find = " ".join(sys.argv[1:])
 
-geocoder_api_server = "http://geocode-maps.yandex.ru/1.x/"
+@app.route('/<title>')
+def index(title):
+    content = {
+        'title': f'{title}',
+        'text1': 'Миссия Колонизация Марса',
+        'text2': 'И на Марсе будут яблони цвести!'
+    }
+    return render_template("base.html",
+                           **content)
 
-geocoder_params = {
-    "apikey": "8013b162-6b42-4997-9691-77b7074026e0",
-    "geocode": toponym_to_find,
-    "format": "json"}
 
-response = requests.get(geocoder_api_server, params=geocoder_params)
+@app.route('/training/<prof>')
+def training(prof):
+    return render_template("list.html",
+                           prof=f'{prof}')
 
-if not response:
-    pass
 
-json_response = response.json()
-toponym = json_response["response"]["GeoObjectCollection"]["featureMember"][0]["GeoObject"]
-toponym_coodrinates = toponym["Point"]["pos"]
-toponym_longitude, toponym_lattitude = toponym_coodrinates.split(" ")
+@app.route('/list_prof/<list>')
+def list_prof(list):
+    return render_template("list.html",
+                           list=list)
 
-address = ",".join([toponym_longitude, toponym_lattitude])
-response = get_size(json_response, address)
-im = BytesIO(response.content)
-opened_image = Image.open(im)
-opened_image.show()
+
+if __name__ == '__main__':
+    app.run(port=8080, host='127.0.0.1')
